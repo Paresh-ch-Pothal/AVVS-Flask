@@ -74,7 +74,7 @@ def match_fingerprint(sample_fingerprint, voter_id):
     Perform fingerprint matching similar to the Streamlit implementation
     """
     # Initialize SIFT
-    sift = cv2.SIFT_create()
+    sift = cv2.SIFT_create(nfeatures=500)  # Restrict features to save memory
 
     # Detect and compute features for the sample image
     keypoints_1, descriptors_1 = sift.detectAndCompute(sample_fingerprint, None)
