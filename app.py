@@ -69,64 +69,130 @@ def get_text_from_image(image_bytes, mime_type):
         return {"error": f"API Error {response.status_code}: {response.text}"}
 
 
+# def match_fingerprint(sample_fingerprint, voter_id):
+#     """
+#     Perform fingerprint matching similar to the Streamlit implementation
+#     """
+#     # Initialize SIFT
+#     sift = cv2.SIFT_create(nfeatures=500)  # Restrict features to save memory
+#
+#     # Detect and compute features for the sample image
+#     keypoints_1, descriptors_1 = sift.detectAndCompute(sample_fingerprint, None)
+#     if descriptors_1 is None:
+#         return False, None
+#
+#     # Folder containing real fingerprint images
+#     real_folder = "SOCOFing/Real"
+#
+#     # Best match tracking
+#     best_score = 0
+#     best_filename = None
+#
+#     # Process images
+#     for file in os.listdir(real_folder):
+#         file_path = os.path.join(real_folder, file)
+#         fingerprint_image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+#
+#         if fingerprint_image is None:
+#             print(f"Warning: Could not read image {file_path}")
+#             continue  # Skip this file
+#
+#         keypoints_2, descriptors_2 = sift.detectAndCompute(fingerprint_image, None)
+#         if descriptors_2 is None:
+#             print(f"Warning: No descriptors found for {file_path}")
+#             continue
+#
+#         # Match descriptors using FLANN matcher
+#         matcher = cv2.FlannBasedMatcher({'algorithm': 1, 'trees': 10}, {})
+#         matches = matcher.knnMatch(descriptors_1, descriptors_2, k=2)
+#
+#         # Apply ratio test
+#         match_points = [p for p, q in matches if p.distance < 0.1 * q.distance]
+#
+#         # Calculate match score
+#         keypoints = min(len(keypoints_1), len(keypoints_2))
+#         match_score = (len(match_points) / keypoints) * 100 if keypoints > 0 else 0
+#
+#         # Update best match
+#         if match_score > best_score:
+#             best_score = match_score
+#             best_filename = file
+#
+#     # Check if the matched fingerprint corresponds to the voter ID
+#     if best_filename:
+#         match = re.match(r"(\d+)__", best_filename)
+#         if match:
+#             number = match.group(1)
+#             data = VOTER_DATA[int(number) - 1]
+#             return data['vid'] == voter_id, best_score
+#
+#     return False, None
+
 def match_fingerprint(sample_fingerprint, voter_id):
     """
-    Perform fingerprint matching similar to the Streamlit implementation
+    Perform fingerprint matching only for the relevant voter's stored fingerprint images.
     """
-    # Initialize SIFT
-    sift = cv2.SIFT_create(nfeatures=500)  # Restrict features to save memory
+    # Get the index of the voter from JSON
+    voter_index = None
+    for i, voter in enumerate(VOTER_DATA):
+        if voter["vid"] == voter_id:
+            voter_index = i + 1  # Since file names start from 1
+            break
+    print(voter_index)
 
-    # Detect and compute features for the sample image
+    if voter_index is None:
+        return False, None  # Voter ID not found
+
+    # Initialize SIFT
+    sift = cv2.SIFT_create(nfeatures=500)
+
+    # Detect and compute features for the sample fingerprint
     keypoints_1, descriptors_1 = sift.detectAndCompute(sample_fingerprint, None)
     if descriptors_1 is None:
         return False, None
 
-    # Folder containing real fingerprint images
+    # Define the fingerprint folder
     real_folder = "SOCOFing/Real"
 
     # Best match tracking
     best_score = 0
     best_filename = None
 
-    # Process images
-    for file in os.listdir(real_folder):
-        file_path = os.path.join(real_folder, file)
-        fingerprint_image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+    # Check only the 10 fingerprint files corresponding to the voter's index
+    for i in range(1, 11):  # Assuming 10 images per voter
+        file_name_pattern = f"{voter_index}__"
+        matching_files = [file for file in os.listdir(real_folder) if file.startswith(file_name_pattern)]
+        print(matching_files)
 
-        if fingerprint_image is None:
-            print(f"Warning: Could not read image {file_path}")
-            continue  # Skip this file
+        for file in matching_files:
+            file_path = os.path.join(real_folder, file)
+            fingerprint_image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
 
-        keypoints_2, descriptors_2 = sift.detectAndCompute(fingerprint_image, None)
-        if descriptors_2 is None:
-            print(f"Warning: No descriptors found for {file_path}")
-            continue
+            if fingerprint_image is None:
+                continue  # Skip unreadable files
 
-        # Match descriptors using FLANN matcher
-        matcher = cv2.FlannBasedMatcher({'algorithm': 1, 'trees': 10}, {})
-        matches = matcher.knnMatch(descriptors_1, descriptors_2, k=2)
+            keypoints_2, descriptors_2 = sift.detectAndCompute(fingerprint_image, None)
+            if descriptors_2 is None:
+                continue  # Skip images with no descriptors
 
-        # Apply ratio test
-        match_points = [p for p, q in matches if p.distance < 0.1 * q.distance]
+            # Match descriptors using FLANN matcher
+            matcher = cv2.FlannBasedMatcher({'algorithm': 1, 'trees': 10}, {})
+            matches = matcher.knnMatch(descriptors_1, descriptors_2, k=2)
 
-        # Calculate match score
-        keypoints = min(len(keypoints_1), len(keypoints_2))
-        match_score = (len(match_points) / keypoints) * 100 if keypoints > 0 else 0
+            # Apply ratio test
+            match_points = [p for p, q in matches if p.distance < 0.1 * q.distance]
 
-        # Update best match
-        if match_score > best_score:
-            best_score = match_score
-            best_filename = file
+            # Calculate match score
+            keypoints = min(len(keypoints_1), len(keypoints_2))
+            match_score = (len(match_points) / keypoints) * 100 if keypoints > 0 else 0
 
-    # Check if the matched fingerprint corresponds to the voter ID
-    if best_filename:
-        match = re.match(r"(\d+)__", best_filename)
-        if match:
-            number = match.group(1)
-            data = VOTER_DATA[int(number) - 1]
-            return data['vid'] == voter_id, best_score
+            # Update best match
+            if match_score > best_score:
+                best_score = match_score
+                best_filename = file
 
-    return False, None
+    return best_score > 50, best_score  # Assuming a match threshold of 50%
+
 
 
 @app.route('/', methods=['GET', 'POST'])
