@@ -138,7 +138,7 @@ def match_fingerprint(sample_fingerprint, voter_id):
         if voter["vid"] == voter_id:
             voter_index = i + 1  # Since file names start from 1
             break
-    print(voter_index)
+    # print(voter_index)
 
     if voter_index is None:
         return False, None  # Voter ID not found
@@ -162,7 +162,7 @@ def match_fingerprint(sample_fingerprint, voter_id):
     for i in range(1, 11):  # Assuming 10 images per voter
         file_name_pattern = f"{voter_index}__"
         matching_files = [file for file in os.listdir(real_folder) if file.startswith(file_name_pattern)]
-        print(matching_files)
+        # print(matching_files)
 
         for file in matching_files:
             file_path = os.path.join(real_folder, file)
