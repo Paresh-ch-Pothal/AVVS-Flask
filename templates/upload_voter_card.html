@@ -1,0 +1,56 @@
+<!-- templates/upload_voter_card.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Voter Card</title>
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m8 offset-m2 l6 offset-l3">
+                <div class="card-panel">
+                    <h4 class="center-align">Voter Verification</h4>
+                    <h5 class="center-align">Upload Voter Card</h5>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="card-panel {{ 'red' if category == 'error' else 'green' }} lighten-4">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('upload_voter_card') }}" method="POST" enctype="multipart/form-data">
+                        <div class="file-field input-field">
+                            <div class="btn">
+                                <span>File</span>
+                                <input type="file" name="voter_card" accept=".jpg,.jpeg,.png,.webp" required>
+                            </div>
+                            <div class="file-path-wrapper">
+                                <input class="file-path validate" type="text" placeholder="Upload Voter Card Image">
+                            </div>
+                        </div>
+
+                        <div class="center-align">
+                            <button type="submit" class="btn waves-effect waves-light">
+                                Upload and Extract Details
+                                <i class="material-icons right">cloud_upload</i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>

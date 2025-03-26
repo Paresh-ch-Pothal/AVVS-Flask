@@ -1,0 +1,52 @@
+<!-- templates/enter_voter_id.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enter Voter ID</title>
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m8 offset-m2 l6 offset-l3">
+                <div class="card-panel">
+                    <h4 class="center-align">Voter Verification</h4>
+                    <h5 class="center-align">Enter Voter ID</h5>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="card-panel {{ 'red' if category == 'error' else 'green' }} lighten-4">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('enter_voter_id') }}" method="POST">
+                        <div class="input-field">
+                            <i class="material-icons prefix">account_box</i>
+                            <input id="voter_id" type="text" name="voter_id" required>
+                            <label for="voter_id">Voter ID</label>
+                        </div>
+
+                        <div class="center-align">
+                            <button type="submit" class="btn waves-effect waves-light">
+                                Verify Voter ID
+                                <i class="material-icons right">check</i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>
